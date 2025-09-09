@@ -48,7 +48,6 @@
   import VirtualList from 'vue-virtual-scroll-list';
   import { getNodeKey, findNearestComponent } from './model/util';
   import ElTreeNode from './tree-node.vue';
-  import ElVirtualNode from './tree-virtual-node.vue';
   import {t} from 'element-ui/src/locale';
   import emitter from 'element-ui/src/mixins/emitter';
   import { addClass, removeClass } from 'element-ui/src/utils/dom';
@@ -76,7 +75,7 @@
           dropNode: null,
           allowDrop: true
         },
-        itemComponent: ElVirtualNode
+        itemComponent: ElTreeNode
       };
     },
 

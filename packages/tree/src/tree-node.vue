@@ -3,19 +3,19 @@
     class="el-tree-node"
     @click.stop="handleClick"
     @contextmenu="($event) => this.handleContextMenu($event)"
-    v-show="node.visible"
+    v-show="actualNode.visible"
     :class="{
       'is-expanded': expanded,
-      'is-current': node.isCurrent,
-      'is-hidden': !node.visible,
-      'is-focusable': !node.disabled,
-      'is-checked': !node.disabled && node.checked
+      'is-current': actualNode.isCurrent,
+      'is-hidden': !actualNode.visible,
+      'is-focusable': !actualNode.disabled,
+      'is-checked': !actualNode.disabled && actualNode.checked
     }"
     role="treeitem"
     tabindex="-1"
     :aria-expanded="expanded"
-    :aria-disabled="node.disabled"
-    :aria-checked="node.checked"
+    :aria-disabled="actualNode.disabled"
+    :aria-checked="actualNode.checked"
     :draggable="tree.draggable"
     @dragstart.stop="handleDragStart"
     @dragover.stop="handleDragOver"
@@ -24,11 +24,11 @@
     ref="node"
   >
     <div class="el-tree-node__content"
-      :style="{ 'padding-left': (node.level - 1) * tree.indent + 'px' }">
+      :style="{ 'padding-left': (actualNode.level - 1) * tree.indent + 'px' }">
       <span
         @click.stop="handleExpandIconClick"
         :class="[
-          { 'is-leaf': node.isLeaf, expanded: !node.isLeaf && expanded },
+          { 'is-leaf': actualNode.isLeaf, expanded: !actualNode.isLeaf && expanded },
           'el-tree-node__expand-icon',
           tree.iconClass ? tree.iconClass : 'el-icon-caret-right'
         ]"
@@ -36,18 +36,18 @@
       </span>
       <el-checkbox
         v-if="showCheckbox"
-        v-model="node.checked"
-        :indeterminate="node.indeterminate"
-        :disabled="!!node.disabled"
+        v-model="actualNode.checked"
+        :indeterminate="actualNode.indeterminate"
+        :disabled="!!actualNode.disabled"
         @click.native.stop
         @change="handleCheckChange"
       >
       </el-checkbox>
       <span
-        v-if="node.loading"
+        v-if="actualNode.loading"
         class="el-tree-node__loading-icon el-icon-loading">
       </span>
-      <node-content :node="node"></node-content>
+      <node-content :node="actualNode"></node-content>
     </div>
     <el-collapse-transition>
       <div
@@ -59,7 +59,7 @@
       >
         <el-tree-node
           :render-content="renderContent"
-          v-for="child in node.childNodes"
+          v-for="child in actualNode.childNodes"
           :render-after-expand="renderAfterExpand"
           :show-checkbox="showCheckbox"
           :key="getNodeKey(child)"
@@ -87,6 +87,11 @@
 
     props: {
       node: {
+        default() {
+          return {};
+        }
+      },
+      source: {
         default() {
           return {};
         }
@@ -128,6 +133,13 @@
       }
     },
 
+    computed: {
+      // 兼容虚拟滚动的 source prop
+      actualNode() {
+        return this.source || this.node;
+      }
+    },
+
     data() {
       return {
         tree: null,
@@ -139,15 +151,15 @@
     },
 
     watch: {
-      'node.indeterminate'(val) {
-        this.handleSelectChange(this.node.checked, val);
+      'actualNode.indeterminate'(val) {
+        this.handleSelectChange(this.actualNode.checked, val);
       },
 
-      'node.checked'(val) {
-        this.handleSelectChange(val, this.node.indeterminate);
+      'actualNode.checked'(val) {
+        this.handleSelectChange(val, this.actualNode.indeterminate);
       },
 
-      'node.expanded'(val) {
+      'actualNode.expanded'(val) {
         this.$nextTick(() => this.expanded = val);
         if (val) {
           this.childNodeRendered = true;
@@ -179,7 +191,9 @@
 
     created() {
       const parent = this.$parent;
-      this.creator(parent, 'node');
+      // 支持虚拟滚动的 source prop
+      const nodeProp = this.source ? 'source' : 'node';
+      this.creator(parent, nodeProp);
     }
   };
 </script>
